@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  kr.kyg.spring.boot.restful.autoconfigure.RestfulDomainAutoConfiguration
