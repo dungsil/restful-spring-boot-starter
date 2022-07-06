@@ -1,0 +1,130 @@
+plugins {
+  alias(lib.plugins.kotlin) apply false
+  alias(lib.plugins.kotlin.spring) apply false
+
+  alias(lib.plugins.spring.boot) apply false
+  alias(lib.plugins.spring.dependency.management) apply false
+}
+
+allprojects {
+  group = "kr.kyg.spring.boot"
+  version = "0.1.0-SNAPSHOT"
+
+  repositories {
+    mavenCentral()
+  }
+}
+
+subprojects {
+  apply(plugin: "kotlin")
+  apply(plugin: "kotlin-spring")
+  apply(plugin: "org.springframework.boot")
+  apply(plugin: "io.spring.dependency-management")
+
+  def isLib = project.name.startsWith("restful-spring-boot-starter")
+
+  dependencies {
+    developmentOnly(lib.bundles.development)
+    compileOnly(lib.bundles.compile)
+    testImplementation(lib.bundles.test)
+  }
+
+  compileKotlin {
+    kotlinOptions {
+      jvmTarget = "1.8"
+    }
+  }
+
+  if (isLib) {
+    jar {
+      enabled = true
+    }
+
+    bootJar {
+      enabled = false
+    }
+  }
+
+  test {
+    useJUnitPlatform()
+  }
+
+  if (isLib) {
+    apply(plugin: "maven-publish")
+
+    java {
+      withJavadocJar()
+      withSourcesJar()
+    }
+
+    publishing {
+      publications {
+        maven(MavenPublication) {
+          groupId = rootProject.group
+          artifactId = project.name
+          version = rootProject.version
+
+          from components.java
+
+          versionMapping {
+            usage('java-api') {
+              fromResolutionOf('runtimeClasspath')
+            }
+            usage('java-runtime') {
+              fromResolutionResult()
+            }
+          }
+
+          pom {
+            name = project.name
+            url = "https://kyg.kr/sbs-restful"
+
+            scm {
+              url = "https://github.com/dungsil/restful-spring-boot-starter"
+              connection = "scm:git:https://github.com/dungsil/restful-spring-boot-starter.git"
+              developerConnection = "scm:git:ssh:git@github.com:dungsil/restful-spring-boot-starter.git"
+            }
+            licenses {
+              license {
+                name = "MIT License"
+                url = "https://github.com/dungsil/restful-spring-boot-starter/blob/main/LICENSE"
+              }
+            }
+            developers {
+              developer {
+                id = "dungsil"
+                name = "Kim Younggeon"
+                email = "opensource@younggeon.kim"
+                url = "https://younggeon.kim"
+              }
+            }
+          }
+        }
+      }
+      repositories {
+        maven {
+          def stage = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+          def snapshot = "https://oss.sonatype.org/content/repositories/snapshots/"
+
+          name = "central"
+          url = version.endsWith('SNAPSHOT') ? snapshot : stage
+
+          credentials {
+            username = System.getenv("OSSRH_USERNAME")
+            password = System.getenv("OSSRH_PASSWORD")
+          }
+        }
+
+        maven {
+          name = "github"
+          url = "https://maven.pkg.github.com/dungsil/restful-spring-boot-starter"
+
+          credentials {
+            username = project.findProperty("gpr.user") ?: "dungsil"
+            password = project.findProperty("gpr.key") ?: System.getenv("GH_TOKEN")
+          }
+        }
+      }
+    }
+  }
+}

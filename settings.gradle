@@ -1,0 +1,25 @@
+dependencyResolutionManagement {
+  versionCatalogs {
+    create("lib") {
+      from(files("gradle/lib.versions.toml"))
+    }
+  }
+}
+
+// 패키지
+include(
+  ":restful-spring-boot-starter"
+)
+
+// 예제
+include(":basic")
+
+for (child in rootProject.children) {
+  def name = child.name
+
+  if (name.startsWith("restful-spring-boot-starter")) {
+    child.projectDir = file("./packages/${child.name}")
+  } else {
+    child.projectDir = file("./examples/${child.name}")
+  }
+}
